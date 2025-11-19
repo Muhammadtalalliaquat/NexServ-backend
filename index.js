@@ -1,35 +1,11 @@
-import express from "express";
-import authRoutes from "./routes/auth.js";
-import serviceRoutes from "./routes/serviceRoute.js";
-import userServiceRoutes from "./routes/userServiceRoute.js";
-import blogsRoutes from "./routes/blogRoute.js";
-import morgan from "morgan";
-import connectDB from "./database/data.js";
-import cors from "cors";
-import "dotenv/config";
+import app, { initDb } from "./app.js";
 
+const PORT = process.env.PORT || 3000;
 
-const app = express();
-const PORT = process.env.PORT;
-
-app.use(express.json());
-app.use(cors("*"));
-app.use(morgan(`dev`));
-
-
-connectDB()
+// Local / traditional server start. Vercel will use /api/index.js instead.
+initDb()
   .then(() => {
-    app.get("/", (req, res) => {
-      res.send("Server is running and DB is connected");
-    });
-
-    app.use("/user", authRoutes);
-    app.use("/blogs", blogsRoutes);
-    app.use("/service", serviceRoutes);
-    app.use("/user-service", userServiceRoutes);
-
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
   })
   .catch((err) => {
     console.error("DB not connected Server is not running:", err.message);
