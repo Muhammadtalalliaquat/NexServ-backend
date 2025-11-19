@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const userServiceSchema = new mongoose.Schema(
   {
-    userId: {
+    author: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
@@ -22,7 +22,7 @@ const userServiceSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
-      // top-level status removed — status now tracked per service in services[].status
+    // top-level status removed — status now tracked per service in services[].status
   },
   { timestamps: true }
 );

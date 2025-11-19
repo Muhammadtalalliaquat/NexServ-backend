@@ -21,9 +21,9 @@ router.post("/userAddService", autheUser, async (req, res) => {
       return sendResponse(res, 404, null, true, "Service not found");
     }
 
-    let userService = await UserService.findOne({ userId: req.user._id });
+    let userService = await UserService.findOne({ author: req.user._id });
     if (!userService) {
-      userService = new UserService({ userId: req.user._id, services: [] });
+      userService = new UserService({ author: req.user._id, services: [] });
     }
 
     // check if service already added
@@ -55,10 +55,10 @@ router.post("/userAddService", autheUser, async (req, res) => {
 
 router.get("/userAllServices", autheUser, async (req, res) => {
   try {
-    const filter = req.user.isAdmin ? {} : { userId: req.user._id };
+    const filter = req.user.isAdmin ? {} : { author: req.user._id };
 
     const orders = await UserService.find(filter)
-      .populate("userId", "userName email isAdmin")
+      .populate("author", "userName email isAdmin")
       .populate("services.serviceId")
       .sort({ createdAt: -1 });
     sendResponse(res, 200, orders, false, "User all services fetch");
@@ -95,7 +95,7 @@ router.put("/updateService/:serviceItemId", autheUser, isAdminCheck, async (req,
       { $set: { "services.$.status": status } },
       { new: true }
     )
-      .populate("userId", "userName email")
+      .populate("author", "userName email")
       .populate("services.serviceId", "title price image");
 
     if (!updateResult)
@@ -105,11 +105,14 @@ router.put("/updateService/:serviceItemId", autheUser, isAdminCheck, async (req,
 
     // Optional: send email if helper exists and user email is present
     try {
-      if (typeof sendStatusUpdateEmail === "function" && updated.userId?.email) {
+      if (
+        typeof sendStatusUpdateEmail === "function" &&
+        updated.author?.email
+      ) {
         // send email about the item status change — pass service item id for clarity
         sendStatusUpdateEmail(
-          updated.userId.email,
-          updated.userId.userName || "",
+          updated.author.email,
+          updated.author.userName || "",
           status,
           serviceItemId
         );
