@@ -17,12 +17,10 @@ async function ensureDb() {
 export default async function (req, res) {
   try {
     await ensureDb();
-    // Log incoming request path for easier debugging in Vercel logs
     console.log(`api/index: incoming ${req.method} ${req.url}`);
     return handler(req, res);
   } catch (err) {
     console.error("Serverless handler init error:", err);
-    // Provide error details in JSON for easier debugging (avoid leaking secrets)
     return res.status(500).json({ error: true, msg: "Server initialization failed", detail: err.message });
   }
 }
