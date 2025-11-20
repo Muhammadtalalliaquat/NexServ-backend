@@ -28,17 +28,15 @@
 import serverless from "serverless-http";
 import app, { initDb } from "../app.js";
 
-let dbInitialized = false;
-
-async function ensureDb() {
-  if (!dbInitialized) {
-    await initDb();
-    dbInitialized = true;
-  }
-}
+let initialized = false;
 
 export default async function handler(req, res) {
-  await ensureDb();
+  if (!initialized) {
+    await initDb();
+    initialized = true;
+  }
+
   return serverless(app)(req, res);
 }
+
 
