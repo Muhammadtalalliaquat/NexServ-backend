@@ -1,5 +1,5 @@
 {
-  "name": "service-backend",
+  "name": "nexserv-backend",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
