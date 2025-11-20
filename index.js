@@ -8,7 +8,7 @@ import connectDB from "./database/data.js";
 import morgan from "morgan";
 import cors from "cors";
 import "dotenv/config";
-// import http from "http";
+import http from "http";
 // import path from "path";
 
 const app = express();
@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
-// const appServer = http.createServer(app);
+const appServer = http.createServer(app);
 
 
 
@@ -35,7 +35,7 @@ connectDB()
     app.use("/contact", contactRoutes);
     app.use("/user-service", userServiceRoutes);
 
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    appServer.listen(PORT, () => console.log(`Server running on port ${PORT}`));
     // const api = functions.https.onRequest(appServer);
   })
   .catch((err) => {
