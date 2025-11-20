@@ -20,6 +20,22 @@ app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
+// Health + DB status (useful for debugging in production)
+import { getReadyState } from "./database/data.js";
+
+app.get("/health", (req, res) => {
+  try {
+    const state = {
+      server: "ok",
+      // mongoose readyState: 0 disconnected, 1 connected, 2 connecting, 3 disconnecting
+      dbReadyState: getReadyState(),
+    };
+    res.json({ error: false, data: state, msg: "Health status" });
+  } catch (err) {
+    res.status(500).json({ error: true, msg: err.message });
+  }
+});
+
 app.use("/user", authRoutes);
 app.use("/blogs", blogsRoutes);
 app.use("/service", serviceRoutes);

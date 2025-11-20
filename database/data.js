@@ -32,5 +32,7 @@ const connectDB = async () => {
     throw error;
   }
 };
+const getReadyState = () => mongoose.connection.readyState;
 
+export { getReadyState };
 export default connectDB;
