@@ -14,10 +14,16 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
+// Health check endpoints
 app.get("/", (req, res) => {
-  res.send("Server is running");
+  res.json({ status: "ok", msg: "Server is running" });
 });
 
+app.get("/health", (req, res) => {
+  res.json({ status: "healthy", msg: "API is operational" });
+});
+
+// API routes
 app.use("/user", authRoutes);
 app.use("/blogs", blogsRoutes);
 app.use("/service", serviceRoutes);
