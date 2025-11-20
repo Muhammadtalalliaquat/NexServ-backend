@@ -2,7 +2,7 @@ import app, { initDb } from "./app.js";
 
 const PORT = process.env.PORT || 3000;
 
-// Local / traditional server start. Vercel will use /api/index.js instead.
+// Local server start (Vercel will use /api/index.js instead)
 initDb()
   .then(() => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
