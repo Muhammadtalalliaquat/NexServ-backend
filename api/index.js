@@ -24,3 +24,21 @@
 //     return res.status(500).json({ error: true, msg: "Server initialization failed", detail: err.message });
 //   }
 // }
+
+import serverless from "serverless-http";
+import app, { initDb } from "../app.js";
+
+let dbInitialized = false;
+
+async function ensureDb() {
+  if (!dbInitialized) {
+    await initDb();
+    dbInitialized = true;
+  }
+}
+
+export default async function handler(req, res) {
+  await ensureDb();
+  return serverless(app)(req, res);
+}
+
