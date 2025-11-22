@@ -14,6 +14,10 @@ const userServiceSchema = new mongoose.Schema(
           ref: "Service",
           required: true,
         },
+        planId: {
+          type: String,
+          required: true,
+        },
         status: {
           type: String,
           enum: ["pending", "processing", "Booked", "completed", "cancelled"],

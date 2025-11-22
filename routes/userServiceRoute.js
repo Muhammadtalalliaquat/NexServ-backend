@@ -9,11 +9,15 @@ import { autheUser, isAdminCheck } from "../middleware/authUser.js";
 const router = express.Router();
 
 router.post("/userAddService", autheUser, async (req, res) => {
-  const { serviceId } = req.body;
+  const { serviceId, planId } = req.body;
 
   try {
     if (!serviceId || !mongoose.Types.ObjectId.isValid(serviceId)) {
       return sendResponse(res, 400, null, true, "Invalid or missing serviceId");
+    }
+
+     if (!planId) {
+      return sendResponse(res, 400, null, true, "Please select a pricing plan");
     }
 
     const serviceExists = await Service.findById(serviceId);
@@ -28,23 +32,21 @@ router.post("/userAddService", autheUser, async (req, res) => {
 
     // check if service already added
     const already = userService.services.some(
-      (s) => s.serviceId.toString() === serviceId
+      (s) => s.serviceId.toString() === serviceId && s.planId === planId
     );
 
     if (already) {
       const populated = await UserService.findById(userService._id).populate(
         "services.serviceId"
       );
-      return sendResponse(res, 200, populated, false, "Service already added for user");
+      return sendResponse(res, 200, populated, false, "Service & plan already added");
     }
 
     // add and save
-    userService.services.push({ serviceId });
+    userService.services.push({ serviceId , planId });
     await userService.save();
 
-    const updated = await UserService.findById(userService._id).populate(
-      "services.serviceId"
-    );
+    const updated = await UserService.findById(userService._id)
 
     return sendResponse(res, 200, updated, false, "Service added to user");
   } catch (error) {
