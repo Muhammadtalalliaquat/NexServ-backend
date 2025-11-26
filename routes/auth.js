@@ -167,8 +167,8 @@ router.post(`/login`, async (req, res) => {
 router.post(`/requestPasswordReset`, async (req, res) => {
   const { email } = req.body;
   try {
-    const user = await User.findOne({ email });
-    if (!user) return sendResponse(res, 403, null, true, "User doesn't exist.");
+    const user = await User.findOne({ email }).lean();
+    if (!user) return sendResponse(res, 403, null, true, "email doesn't exist.");
 
     const secret = process.env.AUTH_SECRET + user.password;
     const token = jwt.sign({ id: user._id, email: user.email }, secret, {
@@ -222,10 +222,17 @@ router.post(`/resetPassword`, async (req, res) => {
       { $set: { password: encryptedPassword } }
     );
 
+    const sanitizedUser = {
+      _id: user._id,
+      email: user.email,
+      userName: user.userName,
+    };
+
+
     sendResponse(
       res,
       200,
-      { user, token, message: "Password has been reset successfully" },
+      { sanitizedUser, token, message: "Password has been reset successfully" },
       false
     );
   } catch (error) {
