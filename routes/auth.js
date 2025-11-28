@@ -7,6 +7,7 @@ import bcrypt, { hash } from "bcrypt";
 import nodemailer from "nodemailer";
 import "dotenv/config";
 import { autheUser } from "../middleware/authUser.js";
+import { Admin } from "mongodb";
 
 const router = express.Router();
 
@@ -74,7 +75,13 @@ router.post(`/register`, async (req, res) => {
     await newUser.save();
     // delete value.password
 
-    // const verificationToken = jwt.sign({...value} , process.env.AUTH_SECRET , { expiresIn: "1h" })
+    const user = {
+      id: newUser._id,
+      name: newUser.userName,
+      email: newUser.email,
+      admin: newUser.isAdmin,
+      // verified: newUser.verifiedEmail,
+    };
 
     const verificationToken = jwt.sign(
       {
@@ -90,7 +97,7 @@ router.post(`/register`, async (req, res) => {
     sendResponse(
       res,
       201,
-      { verificationToken, user: newUser },
+      { verificationToken, user },
       false,
       "User Registered Successfully"
     );
@@ -112,7 +119,7 @@ router.post(`/verifyemail`, async (req, res) => {
       decoded.id,
       { verifiedEmail: true },
       { new: true }
-    );
+    ).select("-password");
 
     if (!updatedUser) {
       return sendResponse(res, 404, null, true, "User not found");
@@ -153,7 +160,7 @@ router.post(`/login`, async (req, res) => {
     var token = jwt.sign(
       { id: user._id, isAdmin: user.isAdmin },
       process.env.AUTH_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: "10d" }
     );
     // var token = jwt.sign({ id: user._id, isAdmin: user.isAdmin }, process.env.AUTH_SECRET, { expiresIn: `1d` });
 
