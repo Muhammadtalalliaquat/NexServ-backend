@@ -15,14 +15,17 @@ const serviceSchema = new mongoose.Schema(
     pricingPlans: {
       basic: {
         price: { type: Number, required: true, min: 0 },
+        planId: { type: String },
         features: { type: [String], default: [] },
       },
       standard: {
         price: { type: Number, required: true, min: 0 },
+        planId: { type: String },
         features: { type: [String], default: [] },
       },
       premium: {
         price: { type: Number, required: true, min: 0 },
+        planId: { type: String },
         features: { type: [String], default: [] },
       },
     },

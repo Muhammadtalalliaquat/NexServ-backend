@@ -20,14 +20,15 @@ const planSchema = Joi.object({
     "number.min": "Plan price must be >= 0",
     "any.required": "Plan price is required",
   }),
+  planId: Joi.string(),
   features: stringOrStringArray.optional(),
 });
 
 const serviceSchema = Joi.object({
   title: Joi.string().min(3).max(100).required().messages({
-    "string.empty": "Name is required",
-    "string.min": "Name should be at least 3 characters",
-    "string.max": "Name should be less than 100 characters",
+    "string.empty": "title is required",
+    "string.min": "title should be at least 3 characters",
+    "string.max": "title should be less than 100 characters",
   }),
   // price is optional if pricingPlans provided
   // price: Joi.number().min(0).optional().messages({
@@ -47,7 +48,7 @@ const serviceSchema = Joi.object({
     standard: planSchema.optional(),
     premium: planSchema.optional(),
   }).optional(),
-}).or('price','pricingPlans');
+}).or("price", "pricingPlans");
 
 router.post("/addService", autheUser, isAdminCheck, upload.single("image"), async (req, res) => {
     try {
@@ -91,11 +92,20 @@ router.post("/addService", autheUser, isAdminCheck, upload.single("image"), asyn
         abortEarly: false,
       });
 
+      // if (error) {
+      //   const message = Array.isArray(error.details)
+      //     ? error.details.map((d) => d.message).join("; ")
+      //     : error.message;
+      //   return sendResponse(res, 200, null, true, message);
+      // }
       if (error) {
-        const message = Array.isArray(error.details)
-          ? error.details.map((d) => d.message).join("; ")
-          : error.message;
-        return sendResponse(res, 400, null, true, message);
+        return sendResponse(
+          res,
+          200,
+          null,
+          true,
+          error.details.map((err) => err.message)
+        );
       }
 
       if (!req.file) {
