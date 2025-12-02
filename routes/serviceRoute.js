@@ -196,12 +196,23 @@ router.put("/editService/:id", autheUser, isAdminCheck, upload.single("image"), 
         abortEarly: false,
       });
 
-      if (error) {
-        const message = Array.isArray(error.details)
-          ? error.details.map((d) => d.message).join("; ")
-          : error.message;
-        return sendResponse(res, 400, null, true, message);
-      }
+
+       if (error) {
+         return sendResponse(
+           res,
+           200,
+           null,
+           true,
+           error.details.map((err) => err.message)
+         );
+       }
+
+      // if (error) {
+      //   const message = Array.isArray(error.details)
+      //     ? error.details.map((d) => d.message).join("; ")
+      //     : error.message;
+      //   return sendResponse(res, 400, null, true, message);
+      // }
 
       if (req.file) {
         const b64 = Buffer.from(req.file.buffer).toString("base64");
@@ -240,6 +251,21 @@ router.put("/editService/:id", autheUser, isAdminCheck, upload.single("image"), 
   }
 );
 
+router.get("/fetchOneService/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const service = await Service.findById(id);
+
+    if (!service) {
+      return sendResponse(res, 404, null, true, "Service not found");
+    }
+
+    sendResponse(res, 200, service, false, "Service fetched successfully");
+  } catch (error) {
+    sendResponse(res, 500, null, true, error.message);
+  }
+});
 
 
 router.get("/fetchService", async (req, res) => {
