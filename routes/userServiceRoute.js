@@ -8,6 +8,55 @@ import { autheUser, isAdminCheck } from "../middleware/authUser.js";
 
 const router = express.Router();
 
+// router.post("/userAddService", autheUser, async (req, res) => {
+//   const { serviceId, planId } = req.body;
+
+//   try {
+//     if (!serviceId || !mongoose.Types.ObjectId.isValid(serviceId)) {
+//       return sendResponse(res, 400, null, true, "Invalid or missing serviceId");
+//     }
+
+//      if (!planId) {
+//       return sendResponse(res, 400, null, true, "Please select a pricing plan");
+//     }
+
+//     const serviceExists = await Service.findById(serviceId);
+//     if (!serviceExists) {
+//       return sendResponse(res, 404, null, true, "Service not found");
+//     }
+
+//     let userService = await UserService.findOne({ author: req.user._id });
+//     if (!userService) {
+//       userService = new UserService({ author: req.user._id, services: [] });
+//     }
+
+//     // check if service already added
+//     const already = userService.services.some(
+//       (s) => s.serviceId.toString() === serviceId && s.planId === planId
+//     );
+
+//     if (already) {
+//       const populated = await UserService.findById(userService._id).populate(
+//         "services.serviceId"
+//       );
+//       return sendResponse(res, 200, populated, false, "Service & plan already added");
+//     }
+
+//     // add and save
+//     userService.services.push({
+//       serviceId,
+//       planId,
+//     });
+//     await userService.save();
+
+//     const updated = await UserService.findById(userService._id)
+
+//     return sendResponse(res, 200, updated, false, "Your service has been added and is being processed. The administrator will update the status soon.");
+//   } catch (error) {
+//     return sendResponse(res, 500, null, true, error.message);
+//   }
+// });
+
 router.post("/userAddService", autheUser, async (req, res) => {
   const { serviceId, planId } = req.body;
 
@@ -16,7 +65,7 @@ router.post("/userAddService", autheUser, async (req, res) => {
       return sendResponse(res, 400, null, true, "Invalid or missing serviceId");
     }
 
-     if (!planId) {
+    if (!planId) {
       return sendResponse(res, 400, null, true, "Please select a pricing plan");
     }
 
@@ -25,49 +74,121 @@ router.post("/userAddService", autheUser, async (req, res) => {
       return sendResponse(res, 404, null, true, "Service not found");
     }
 
+    // Find plan in pricingPlans
+    const planKey = Object.keys(serviceExists.pricingPlans).find(
+      (k) => serviceExists.pricingPlans[k].planId === planId
+    );
+    if (!planKey) {
+      return sendResponse(res, 404, null, true, "Plan not found");
+    }
+    const selectedPlan = serviceExists.pricingPlans[planKey];
+
     let userService = await UserService.findOne({ author: req.user._id });
     if (!userService) {
       userService = new UserService({ author: req.user._id, services: [] });
     }
 
-    // check if service already added
-    const already = userService.services.some(
-      (s) => s.serviceId.toString() === serviceId && s.planId === planId
+    // Check if user already has this service
+    const serviceIndex = userService.services.findIndex(
+      (s) => s.serviceId.toString() === serviceId
     );
 
-    if (already) {
+    if (serviceIndex !== -1) {
+      // Update existing plan
+      userService.services[serviceIndex].planId = planId;
+      await userService.save();
+
       const populated = await UserService.findById(userService._id).populate(
         "services.serviceId"
       );
-      return sendResponse(res, 200, populated, false, "Service & plan already added");
+
+      return sendResponse(
+        res,
+        200,
+        { userService: populated, selectedPlan },
+        false,
+        "Service plan updated successfully"
+      );
     }
 
-    // add and save
-    userService.services.push({ serviceId , planId });
+    userService.services.push({ serviceId, planId });
     await userService.save();
 
-    const updated = await UserService.findById(userService._id)
+    const populated = await UserService.findById(userService._id).populate(
+      "services.serviceId"
+    );
 
-    return sendResponse(res, 200, updated, false, "Service added to user");
+    return sendResponse(
+      res,
+      200,
+      { userService: populated, selectedPlan },
+      false,
+      "Your service has been added and is being processed. The administrator will update the status soon."
+    );
   } catch (error) {
     return sendResponse(res, 500, null, true, error.message);
   }
 });
 
 
+
+
 router.get("/userAllServices", autheUser, async (req, res) => {
   try {
     const filter = req.user.isAdmin ? {} : { author: req.user._id };
 
-    const orders = await UserService.find(filter)
+    const userService = await UserService.findOne(filter)
       .populate("author", "userName email isAdmin")
       .populate("services.serviceId")
       .sort({ createdAt: -1 });
-    sendResponse(res, 200, orders, false, "User all services fetch");
+
+    if (!userService) {
+      return sendResponse(res, 200, null, false, "No services found");
+    }
+
+   const servicesWithPlan = userService.services.map((s) => {
+     const service = s.serviceId;
+
+     // Find the pricing plan where planId matches
+     const planKey = Object.keys(service?.pricingPlans || {}).find(
+       (k) => service.pricingPlans[k].planId === s.planId
+     );
+
+     const planData = planKey ? service.pricingPlans[planKey] : null;
+
+     return {
+       ...s._doc,
+       selectedPlan: planData,
+     };
+   });
+
+    sendResponse(
+      res,
+      200,
+      { ...userService._doc, services: servicesWithPlan },
+      false,
+      "User all services fetch"
+    );
   } catch (error) {
     sendResponse(res, 500, null, true, error.message);
   }
 });
+
+
+
+// router.get("/userAllServices", autheUser, async (req, res) => {
+//   try {
+//     const filter = req.user.isAdmin === true ? {} : { author: req.user._id };
+
+//     const orders = await UserService.findOne(filter)
+//       .populate("author", "userName email isAdmin")
+//       .populate("services.serviceId")
+//       .sort({ createdAt: -1 });
+//     sendResponse(res, 200, orders, false, "User all services fetch");
+//   } catch (error) {
+//     sendResponse(res, 500, null, true, error.message);
+//   }
+// });
 
 
 
@@ -77,7 +198,7 @@ router.put("/updateService/:serviceItemId", autheUser, isAdminCheck, async (req,
 
   try {
     const validStatuses = [
-      "pending",
+      // "pending",
       "processing",
       "Booked",
       "completed",

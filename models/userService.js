@@ -20,8 +20,8 @@ const userServiceSchema = new mongoose.Schema(
         },
         status: {
           type: String,
-          enum: ["pending", "processing", "Booked", "completed", "cancelled"],
-          default: "pending",
+          enum: ["processing", "Booked", "completed", "cancelled"],
+          default: "processing",
         },
         createdAt: { type: Date, default: Date.now },
       },
