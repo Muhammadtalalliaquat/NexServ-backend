@@ -88,6 +88,20 @@ router.post("/userAddService", autheUser, async (req, res) => {
       userService = new UserService({ author: req.user._id, services: [] });
     }
 
+    const already = userService.services.some(
+      (s) => s.serviceId.toString() === serviceId && s.planId === planId
+    );
+
+    if (already) {
+      return sendResponse(
+        res,
+        200,
+        already,
+        false,
+        "Service & plan already added"
+      );
+    }
+
     // Check if user already has this service
     const serviceIndex = userService.services.findIndex(
       (s) => s.serviceId.toString() === serviceId
@@ -130,96 +144,85 @@ router.post("/userAddService", autheUser, async (req, res) => {
   }
 });
 
-
-
-
-router.get("/userAllServices", autheUser, async (req, res) => {
-  try {
-    const filter = req.user.isAdmin ? {} : { author: req.user._id };
-
-    const userService = await UserService.findOne(filter)
-      .populate("author", "userName email isAdmin")
-      .populate("services.serviceId")
-      .sort({ createdAt: -1 });
-
-    if (!userService) {
-      return sendResponse(res, 200, null, false, "No services found");
-    }
-
-   const servicesWithPlan = userService.services.map((s) => {
-     const service = s.serviceId;
-
-     // Find the pricing plan where planId matches
-     const planKey = Object.keys(service?.pricingPlans || {}).find(
-       (k) => service.pricingPlans[k].planId === s.planId
-     );
-
-     const planData = planKey ? service.pricingPlans[planKey] : null;
-
-     return {
-       ...s._doc,
-       selectedPlan: planData,
-     };
-   });
-
-    sendResponse(
-      res,
-      200,
-      { ...userService._doc, services: servicesWithPlan },
-      false,
-      "User all services fetch"
-    );
-  } catch (error) {
-    sendResponse(res, 500, null, true, error.message);
-  }
-});
-
-
-
 // router.get("/userAllServices", autheUser, async (req, res) => {
 //   try {
-//     const filter = req.user.isAdmin === true ? {} : { author: req.user._id };
+//     const filter = req.user.isAdmin ? {} : { author: req.user._id };
 
-//     const orders = await UserService.findOne(filter)
+//     const userService = await UserService.find(filter)
 //       .populate("author", "userName email isAdmin")
 //       .populate("services.serviceId")
 //       .sort({ createdAt: -1 });
-//     sendResponse(res, 200, orders, false, "User all services fetch");
+
+//     if (!userService || userService.length === 0) {
+//       return sendResponse(res, 200, [], false, "No services found");
+//     }
+
+//    const servicesWithPlan = userService.map((us) => {
+//      const updatedServices = us.services.map((s) => {
+//        const service = s.serviceId;
+
+//        const planKey = Object.keys(service?.pricingPlans || {}).find(
+//          (k) => service.pricingPlans[k].planId === s.planId
+//        );
+
+//        const planData = planKey ? service.pricingPlans[planKey] : null;
+
+//        return {
+//          ...s._doc,
+//          selectedPlan: planData,
+//        };
+//      });
+
+//      return {
+//        ...us._doc,
+//        services: updatedServices,
+//      };
+//    });
+
+//     sendResponse(res, 200, servicesWithPlan, false, "User all services fetch");
 //   } catch (error) {
 //     sendResponse(res, 500, null, true, error.message);
 //   }
 // });
 
+router.get("/eachUserServices", autheUser, async (req, res) => {
+  try {
+    const userService = await UserService.findOne({ author: req.user._id })
+      .populate("author", "userName email isAdmin")
+      .populate("services.serviceId")
+      .sort({ createdAt: -1 });
 
+    if (!userService || userService.length === 0) {
+      return sendResponse(res, 200, [], false, "No services found");
+    }
+    sendResponse(res, 200, userService, false, "User all services fetch");
+  } catch (error) {
+    sendResponse(res, 500, null, true, error.message);
+  }
+});
 
-router.put("/updateService/:serviceItemId", autheUser, isAdminCheck, async (req, res) => {
-    const { serviceItemId } = req.params;
-    const { status } = req.body;
+router.put("/updateService/:id", autheUser, isAdminCheck, async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
 
   try {
-    const validStatuses = [
-      // "pending",
-      "processing",
-      "Booked",
-      "completed",
-      "cancelled",
-    ];
+    const validStatuses = ["processing", "Booked", "completed", "cancelled"];
     if (!status || !validStatuses.includes(status)) {
       return sendResponse(res, 400, null, true, "Invalid status");
     }
 
-    if (!serviceItemId || !mongoose.Types.ObjectId.isValid(serviceItemId)) {
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return sendResponse(res, 400, null, true, "Invalid service item id");
     }
 
     // update only the subdocument's status
     const updateResult = await UserService.findOneAndUpdate(
-      { "services._id": serviceItemId },
+      { "services._id": id },
       { $set: { "services.$.status": status } },
       { new: true }
     )
       .populate("author", "userName email")
-      .populate("services.serviceId", "title price image");
+      .populate("services.serviceId");
 
     if (!updateResult)
       return sendResponse(res, 404, null, true, "Service item not found");
@@ -237,7 +240,7 @@ router.put("/updateService/:serviceItemId", autheUser, isAdminCheck, async (req,
           updated.author.email,
           updated.author.userName || "",
           status,
-          serviceItemId
+          id
         );
       }
     } catch (e) {
@@ -246,7 +249,7 @@ router.put("/updateService/:serviceItemId", autheUser, isAdminCheck, async (req,
 
     if (status === "completed") {
       // remove only the completed subdocument
-      await UserService.updateOne({}, { $pull: { services: { _id: serviceItemId } } });
+      await UserService.updateOne({}, { $pull: { services: { _id: id } } });
       return sendResponse(
         res,
         200,
@@ -256,11 +259,16 @@ router.put("/updateService/:serviceItemId", autheUser, isAdminCheck, async (req,
       );
     }
 
-    return sendResponse(res, 200, updated, false, "Status updated successfully");
+    return sendResponse(
+      res,
+      200,
+      updated,
+      false,
+      "Status updated successfully"
+    );
   } catch (error) {
     return sendResponse(res, 500, null, true, error.message);
   }
-  }
-);
+});
 
 export default router;
