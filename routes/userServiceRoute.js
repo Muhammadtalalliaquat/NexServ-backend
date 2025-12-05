@@ -144,46 +144,46 @@ router.post("/userAddService", autheUser, async (req, res) => {
   }
 });
 
-// router.get("/userAllServices", autheUser, async (req, res) => {
-//   try {
-//     const filter = req.user.isAdmin ? {} : { author: req.user._id };
+router.get("/userAllServices", autheUser, async (req, res) => {
+  try {
+    const filter = req.user.isAdmin ? {} : { author: req.user._id };
 
-//     const userService = await UserService.find(filter)
-//       .populate("author", "userName email isAdmin")
-//       .populate("services.serviceId")
-//       .sort({ createdAt: -1 });
+    const userService = await UserService.find(filter)
+      .populate("author", "userName email isAdmin")
+      .populate("services.serviceId")
+      .sort({ createdAt: -1 });
 
-//     if (!userService || userService.length === 0) {
-//       return sendResponse(res, 200, [], false, "No services found");
-//     }
+    if (!userService || userService.length === 0) {
+      return sendResponse(res, 200, [], false, "No services found");
+    }
 
-//    const servicesWithPlan = userService.map((us) => {
-//      const updatedServices = us.services.map((s) => {
-//        const service = s.serviceId;
+   const servicesWithPlan = userService.map((us) => {
+     const updatedServices = us.services.map((s) => {
+       const service = s.serviceId;
 
-//        const planKey = Object.keys(service?.pricingPlans || {}).find(
-//          (k) => service.pricingPlans[k].planId === s.planId
-//        );
+       const planKey = Object.keys(service?.pricingPlans || {}).find(
+         (k) => service.pricingPlans[k].planId === s.planId
+       );
 
-//        const planData = planKey ? service.pricingPlans[planKey] : null;
+       const planData = planKey ? service.pricingPlans[planKey] : null;
 
-//        return {
-//          ...s._doc,
-//          selectedPlan: planData,
-//        };
-//      });
+       return {
+         ...s._doc,
+         selectedPlan: planData,
+       };
+     });
 
-//      return {
-//        ...us._doc,
-//        services: updatedServices,
-//      };
-//    });
+     return {
+       ...us._doc,
+       services: updatedServices,
+     };
+   });
 
-//     sendResponse(res, 200, servicesWithPlan, false, "User all services fetch");
-//   } catch (error) {
-//     sendResponse(res, 500, null, true, error.message);
-//   }
-// });
+    sendResponse(res, 200, servicesWithPlan, false, "User all services fetch");
+  } catch (error) {
+    sendResponse(res, 500, null, true, error.message);
+  }
+});
 
 router.get("/eachUserServices", autheUser, async (req, res) => {
   try {
