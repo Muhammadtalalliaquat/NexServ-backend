@@ -148,6 +148,10 @@ router.get("/userAllServices", autheUser, async (req, res) => {
   try {
     const filter = req.user.isAdmin ? {} : { author: req.user._id };
 
+    if (!filter) {
+      return sendResponse(res, 404, null, true, "User not found");
+    }
+
     const userService = await UserService.find(filter)
       .populate("author", "userName email isAdmin")
       .populate("services.serviceId")
@@ -215,7 +219,6 @@ router.put("/updateService/:id", autheUser, isAdminCheck, async (req, res) => {
       return sendResponse(res, 400, null, true, "Invalid service item id");
     }
 
-    // update only the subdocument's status
     const updateResult = await UserService.findOneAndUpdate(
       { "services._id": id },
       { $set: { "services.$.status": status } },
@@ -229,13 +232,11 @@ router.put("/updateService/:id", autheUser, isAdminCheck, async (req, res) => {
 
     const updated = updateResult;
 
-    // Optional: send email if helper exists and user email is present
     try {
       if (
         typeof sendStatusUpdateEmail === "function" &&
         updated.author?.email
       ) {
-        // send email about the item status change — pass service item id for clarity
         sendStatusUpdateEmail(
           updated.author.email,
           updated.author.userName || "",
@@ -248,7 +249,6 @@ router.put("/updateService/:id", autheUser, isAdminCheck, async (req, res) => {
     }
 
     if (status === "completed") {
-      // remove only the completed subdocument
       await UserService.updateOne({}, { $pull: { services: { _id: id } } });
       return sendResponse(
         res,
