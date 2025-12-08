@@ -8,12 +8,6 @@ const blogSchema = new mongoose.Schema(
       required: true,
     },
 
-    service: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Service",
-      required: true,
-    },
-
     title: {
       type: String,
       required: true,

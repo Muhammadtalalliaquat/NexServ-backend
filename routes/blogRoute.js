@@ -16,7 +16,6 @@ const blogValidation = Joi.object({
   title: Joi.string().min(5).required(),
   content: Joi.string().min(20).required(),
   tags: Joi.array().items(Joi.string()).default([]),
-  service: Joi.string().required(),
 });
 
 
@@ -62,17 +61,10 @@ router.post("/addBlog", autheUser, isAdminCheck, upload.single("image"),
         return sendResponse(res, 400, null, true, error.message);
       }
 
-      const { title, content, tags, service } = value;
+      const { title, content, tags } = value;
       let imageUrl = null;
 
-      if (!mongoose.Types.ObjectId.isValid(service)) {
-        return sendResponse(res, 400, null, true, "Invalid service id provided");
-      }
-
-      const existingService = await Service.findById(service);
-      if (!existingService) {
-        return sendResponse(res, 404, null, true, "Referenced service not found");
-      }
+      
 
       if (req.file) {
         const b64 = Buffer.from(req.file.buffer).toString("base64");
@@ -91,7 +83,6 @@ router.post("/addBlog", autheUser, isAdminCheck, upload.single("image"),
 
       const newBlog = await Blog.create({
         author: req.user._id,
-        service,
         title,
         content,
         tags,
@@ -154,16 +145,6 @@ router.put("/editBlog/:id", autheUser, isAdminCheck, upload.single("image"), asy
       const { title, content, tags } = value;
       let imageUrl = null;
 
-    //   if (service) {
-    //     if (!mongoose.Types.ObjectId.isValid(service)) {
-    //       return sendResponse(res, 400, null, true, "Invalid service id provided");
-    //     }
-
-    //     const existingService = await Service.findById(service);
-    //     if (!existingService) {
-    //       return sendResponse(res, 404, null, true, "Referenced service not found");
-    //     }
-    //   }
 
       if (req.file) {
         const b64 = Buffer.from(req.file.buffer).toString("base64");
@@ -235,34 +216,34 @@ router.get("/fetchAllBlogs", async (req, res) => {
   }
 });
 
-router.get("/fetchBlogByService/:serviceId", autheUser, async (req, res) => {
-  try {
-    const { serviceId } = req.params;
+// router.get("/fetchBlogByService/:serviceId", autheUser, async (req, res) => {
+//   try {
+//     const { serviceId } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-      return sendResponse(res, 400, null, true, "Invalid service ID");
-    }
+//     if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+//       return sendResponse(res, 400, null, true, "Invalid service ID");
+//     }
 
-    const blog = await Blog.findOne({ service: serviceId })
-      .populate("author", "userName email isAdmin")
-      .populate("service", "title")
-      .select("-__v");
+//     const blog = await Blog.findOne({ service: serviceId })
+//       .populate("author", "userName email isAdmin")
+//       .populate("service", "title")
+//       .select("-__v");
 
-    if (!blog) {
-      return sendResponse(
-        res,
-        404,
-        null,
-        true,
-        "No blog found for this service"
-      );
-    }
+//     if (!blog) {
+//       return sendResponse(
+//         res,
+//         404,
+//         null,
+//         true,
+//         "No blog found for this service"
+//       );
+//     }
 
-    return sendResponse(res, 200, blog, false, "Blog fetched successfully");
-  } catch (error) {
-    return sendResponse(res, 500, null, true, error.message);
-  }
-});
+//     return sendResponse(res, 200, blog, false, "Blog fetched successfully");
+//   } catch (error) {
+//     return sendResponse(res, 500, null, true, error.message);
+//   }
+// });
 
 
 router.delete("/deleteBlog/:id", autheUser, isAdminCheck, async (req, res) => {
