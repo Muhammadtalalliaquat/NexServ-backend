@@ -8,8 +8,6 @@ import { autheUser, isAdminCheck } from "../middleware/authUser.js";
 import upload from "../middleware/uploadImage.js";
 import cloudinary from "../config/cloudinary.js";
 
-
-
 const router = express.Router();
 
 const blogValidation = Joi.object({
@@ -18,17 +16,16 @@ const blogValidation = Joi.object({
   tags: Joi.array().items(Joi.string()).default([]),
 });
 
-
-
-router.post("/addBlog", autheUser, isAdminCheck, upload.single("image"),
-  async (req, res) => {
+router.post("/addBlog", autheUser, isAdminCheck,upload.single("image"), async (req, res) => {
     try {
       // Normalize tags coming from multipart/form-data (may be a string)
       let incomingTags = req.body.tags;
       let parsedTags = [];
       if (incomingTags) {
         if (Array.isArray(incomingTags)) {
-          parsedTags = incomingTags.map((t) => String(t).trim()).filter(Boolean);
+          parsedTags = incomingTags
+            .map((t) => String(t).trim())
+            .filter(Boolean);
         } else if (typeof incomingTags === "string") {
           // try JSON array first: "[\"a\",\"b\"]"
           try {
@@ -63,8 +60,6 @@ router.post("/addBlog", autheUser, isAdminCheck, upload.single("image"),
 
       const { title, content, tags } = value;
       let imageUrl = null;
-
-      
 
       if (req.file) {
         const b64 = Buffer.from(req.file.buffer).toString("base64");
@@ -103,7 +98,6 @@ router.post("/addBlog", autheUser, isAdminCheck, upload.single("image"),
   }
 );
 
-
 router.put("/editBlog/:id", autheUser, isAdminCheck, upload.single("image"), async (req, res) => {
     try {
       const { id } = req.params;
@@ -117,24 +111,32 @@ router.put("/editBlog/:id", autheUser, isAdminCheck, upload.single("image"), asy
       let parsedTags = [];
       if (incomingTags) {
         if (Array.isArray(incomingTags)) {
-          parsedTags = incomingTags.map((t) => String(t).trim()).filter(Boolean);
+          parsedTags = incomingTags
+            .map((t) => String(t).trim())
+            .filter(Boolean);
         } else if (typeof incomingTags === "string") {
           try {
             const maybe = JSON.parse(incomingTags);
             if (Array.isArray(maybe)) {
               parsedTags = maybe.map((t) => String(t).trim()).filter(Boolean);
             } else {
-              parsedTags = incomingTags.split(",").map((t) => t.trim()).filter(Boolean);
+              parsedTags = incomingTags
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean);
             }
           } catch (e) {
-            parsedTags = incomingTags.split(",").map((t) => t.trim()).filter(Boolean);
+            parsedTags = incomingTags
+              .split(",")
+              .map((t) => t.trim())
+              .filter(Boolean);
           }
         }
       }
 
       const bodyForValidation = { ...req.body, tags: parsedTags };
 
-      const { error, value } = blogUpdateValidation.validate(bodyForValidation, {
+      const { error, value } = blogValidation.validate(bodyForValidation, {
         abortEarly: false,
       });
 
@@ -144,7 +146,6 @@ router.put("/editBlog/:id", autheUser, isAdminCheck, upload.single("image"), asy
 
       const { title, content, tags } = value;
       let imageUrl = null;
-
 
       if (req.file) {
         const b64 = Buffer.from(req.file.buffer).toString("base64");
@@ -170,12 +171,20 @@ router.put("/editBlog/:id", autheUser, isAdminCheck, upload.single("image"), asy
       if (title) updates.title = title;
       if (content) updates.content = content;
       if (tags) updates.tags = tags;
-    //   if (service) updates.service = service;
+      //   if (service) updates.service = service;
       if (imageUrl) updates.image = imageUrl;
 
-      const updatedBlog = await Blog.findByIdAndUpdate(id, updates, { new: true });
+      const updatedBlog = await Blog.findByIdAndUpdate(id, updates, {
+        new: true,
+      });
 
-      return sendResponse(res, 200, updatedBlog, false, "Blog updated successfully");
+      return sendResponse(
+        res,
+        200,
+        updatedBlog,
+        false,
+        "Blog updated successfully"
+      );
     } catch (err) {
       console.log("Edit Blog Error:", err);
       return sendResponse(res, 500, null, true, err.message);
@@ -183,108 +192,118 @@ router.put("/editBlog/:id", autheUser, isAdminCheck, upload.single("image"), asy
   }
 );
 
-router.get("/fetchAllBlogs", async (req, res) => {
+router.get("/fetch3blog", async (req, res) => {
   try {
-    const page = Math.max(1, parseInt(req.query.page) || 1);
-    const pageSize = Math.max(
-      1,
-      Math.min(100, parseInt(req.query.pageSize) || 20)
-    );
-    // No filter supplied: return all blogs. If you want filtering later, build a filter object.
-    const filter = {};
+    const blog = await Blog.find().limit(3).sort({ createdAt: -1 });
 
-    const [total, blogs] = await Promise.all([
-      Blog.countDocuments(filter),
-      Blog.find(filter)
-        .populate("author", "userName email isAdmin")
-        // .populate("service")
-        .sort({ createdAt: -1 })
-        .skip((page - 1) * pageSize)
-        .limit(pageSize)
-        .select("-__v"),
-    ]);
+    if (!blog) {
+      return sendResponse(
+        res,
+        404,
+        null,
+        true,
+        "No blog found for this service"
+      );
+    }
 
-    return sendResponse(
-      res,
-      200,
-      { blogs, meta: { total, page, pageSize } },
-      false,
-      "All blogs fetched successfully"
-    );
+    return sendResponse(res, 200, blog, false, "Blog fetched successfully");
   } catch (error) {
     return sendResponse(res, 500, null, true, error.message);
   }
 });
 
-// router.get("/fetchBlogByService/:serviceId", autheUser, async (req, res) => {
+// router.get("/fetchAllBlogs", async (req, res) => {
 //   try {
-//     const { serviceId } = req.params;
+//     const page = Math.max(1, parseInt(req.query.page) || 1);
+//     const pageSize = Math.max(
+//       1,
+//       Math.min(100, parseInt(req.query.pageSize) || 20)
+//     );
+//     // No filter supplied: return all blogs. If you want filtering later, build a filter object.
+//     const filter = {};
 
-//     if (!mongoose.Types.ObjectId.isValid(serviceId)) {
-//       return sendResponse(res, 400, null, true, "Invalid service ID");
-//     }
+//     const [total, blogs] = await Promise.all([
+//       Blog.countDocuments(filter),
+//       Blog.find(filter)
+//         .populate("author", "userName email isAdmin")
+//         // .populate("service")
+//         .sort({ createdAt: -1 })
+//         .skip((page - 1) * pageSize)
+//         .limit(pageSize)
+//         .select("-__v"),
+//     ]);
 
-//     const blog = await Blog.findOne({ service: serviceId })
-//       .populate("author", "userName email isAdmin")
-//       .populate("service", "title")
-//       .select("-__v");
-
-//     if (!blog) {
-//       return sendResponse(
-//         res,
-//         404,
-//         null,
-//         true,
-//         "No blog found for this service"
-//       );
-//     }
-
-//     return sendResponse(res, 200, blog, false, "Blog fetched successfully");
+//     return sendResponse(
+//       res,
+//       200,
+//       { blogs, meta: { total, page, pageSize } },
+//       false,
+//       "All blogs fetched successfully"
+//     );
 //   } catch (error) {
 //     return sendResponse(res, 500, null, true, error.message);
 //   }
 // });
 
+router.get("/fetchOneBlog/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return sendResponse(res, 400, null, true, "Invalid Blog ID");
+    }
+
+    const blog = await Blog.findById(id);
+
+    if (!blog) {
+      return sendResponse(res, 404, null, true, "No blog found for this ID");
+    }
+
+    return sendResponse(res, 200, blog, false, "Blog fetched successfully");
+  } catch (error) {
+    return sendResponse(res, 500, null, true, error.message);
+  }
+});
+
 
 router.delete("/deleteBlog/:id", autheUser, isAdminCheck, async (req, res) => {
-    try {
-      const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-      if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-        return sendResponse(res, 400, null, true, "Invalid blog id");
-      }
-
-      const deletedBlog = await Blog.findByIdAndDelete(id);
-      if (!deletedBlog) {
-        return sendResponse(res, 404, null, true, "Blog not found");
-      }
-
-      // Attempt to delete image from Cloudinary if exists
-      try {
-        if (deletedBlog.image) {
-          // extract public_id from Cloudinary url: segment after /upload/ and before extension
-          const m = deletedBlog.image.match(/\/upload\/(?:v\d+\/)?(.+?)\.[a-zA-Z0-9]+(?:\?.*)?$/);
-          if (m && m[1]) {
-            await cloudinary.uploader.destroy(m[1]);
-          }
-        }
-      } catch (cloudErr) {
-        console.warn("Cloudinary delete failed:", cloudErr.message || cloudErr);
-      }
-
-      return sendResponse(
-        res,
-        200,
-        deletedBlog,
-        false,
-        "Blog deleted successfully"
-      );
-    } catch (error) {
-      return sendResponse(res, 500, null, true, error.message);
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return sendResponse(res, 400, null, true, "Invalid blog id");
     }
+
+    const deletedBlog = await Blog.findByIdAndDelete(id);
+    if (!deletedBlog) {
+      return sendResponse(res, 404, null, true, "Blog not found");
+    }
+
+    // Attempt to delete image from Cloudinary if exists
+    try {
+      if (deletedBlog.image) {
+        // extract public_id from Cloudinary url: segment after /upload/ and before extension
+        const m = deletedBlog.image.match(
+          /\/upload\/(?:v\d+\/)?(.+?)\.[a-zA-Z0-9]+(?:\?.*)?$/
+        );
+        if (m && m[1]) {
+          await cloudinary.uploader.destroy(m[1]);
+        }
+      }
+    } catch (cloudErr) {
+      console.warn("Cloudinary delete failed:", cloudErr.message || cloudErr);
+    }
+
+    return sendResponse(
+      res,
+      200,
+      deletedBlog,
+      false,
+      "Blog deleted successfully"
+    );
+  } catch (error) {
+    return sendResponse(res, 500, null, true, error.message);
   }
-);
-
-
+});
 
 export default router;
