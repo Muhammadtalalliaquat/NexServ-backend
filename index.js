@@ -4,6 +4,7 @@ import serviceRoutes from "./routes/serviceRoute.js";
 import userServiceRoutes from "./routes/userServiceRoute.js";
 import blogsRoutes from "./routes/blogRoute.js";
 import contactRoutes from "./routes/contactRoute.js";
+import reviewRoutes from "./routes/reviewRoute.js";
 import connectDB from "./database/data.js";
 import morgan from "morgan";
 import cors from "cors";
@@ -32,6 +33,7 @@ connectDB()
     app.use("/blogs", blogsRoutes);
     app.use("/service", serviceRoutes);
     app.use("/contact", contactRoutes);
+    app.use("/user-review", reviewRoutes);
     app.use("/user-service", userServiceRoutes);
 
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
