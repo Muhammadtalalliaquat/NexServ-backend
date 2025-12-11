@@ -77,7 +77,7 @@ router.post(`/register`, async (req, res) => {
 
     const user = {
       id: newUser._id,
-      name: newUser.userName,
+      userName: newUser.userName,
       email: newUser.email,
       admin: newUser.isAdmin,
       // verified: newUser.verifiedEmail,

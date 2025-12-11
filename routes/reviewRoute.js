@@ -50,7 +50,7 @@ router.post("/addReview", autheUser, async (req, res) => {
 
     console.log("review data here", avgRating);
 
-    sendResponse(res, 200, updateReviews, false, "Review submitted");
+    sendResponse(res, 200, updateReviews, false, "Your feed back is submitted");
   } catch (error) {
     sendResponse(res, 500, null, true, error.message);
   }
