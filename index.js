@@ -32,7 +32,7 @@ connectDB()
     app.use("/user", authRoutes);
     app.use("/blogs", blogsRoutes);
     app.use("/service", serviceRoutes);
-    app.use("/contact", contactRoutes);
+    app.use("/contact-us", contactRoutes);
     app.use("/user-review", reviewRoutes);
     app.use("/user-service", userServiceRoutes);
 

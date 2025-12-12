@@ -17,7 +17,7 @@ router.post("/addReview", autheUser, async (req, res) => {
 
     const { error } = reviewSchema.validate({ rating, comment });
     if (error) {
-      return sendResponse(res, 400, null, true, error.details[0].message);
+      return sendResponse(res, 200, null, true, error.details[0].message);
     }
 
     if (!rating || !comment) {

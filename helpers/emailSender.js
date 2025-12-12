@@ -51,14 +51,14 @@ export const sendStatusUpdateEmail = async (email, name, status, serviceId) => {
   const mailOptions = {
     from: process.env.SENDER_EMAIL || process.env.SMTP_USER,
     to: email,
-    subject: `Your Service Order #${serviceId} Status Updated`,
+    subject: `Your Service #${serviceId} Status Updated`,
     html: `
       <p>Dear ${name || "Customer"},</p>
-      <p>We wanted to inform you that the status of your order <strong>#${serviceId}</strong> has been updated to:</p>
+      <p>We wanted to inform you that the status of your Service <strong>#${serviceId}</strong> has been updated to:</p>
       <h3 style="color: #007bff;">${String(status).toUpperCase()}</h3>
       ${
         status === "completed"
-          ? "<p>Thank you for using our services. Your order has been completed successfully!</p>"
+          ? "<p>Thank you for using our services. Your Service has been completed successfully!</p>"
           : "<p>You will be notified as it progresses further.</p>"
       }
       <br/>

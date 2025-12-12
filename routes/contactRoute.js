@@ -48,37 +48,46 @@ function sendEmail(recepientEmail) {
   });
 }
 
-router.post("/addContact", autheUser , async (req, res) => {
+router.post("/addContact", autheUser, async (req, res) => {
   try {
     const { error, value } = registerSchema.validate(req.body, {
       abortEarly: false,
     });
 
     if (error) {
-      return sendResponse(
-        res,
-        400,
-        null,
-        true,
-        error.details.map((err) => err.message).join(", ")
-      );
+      return sendResponse(res, 400, null, true, error.details[0].message);
     }
-
     const { name, email, message } = value;
 
-    const newContact = new Contact({
-      name,
-      email,
-      message,
+    if (!name || !email || !message) {
+      return sendResponse(res, 400, null, true, "All fields are required.");
+    }
+
+    let contactUser = await Contact.findOne({
+      author: req.user._id,
     });
+
+    if (contactUser) {
+      contactUser.name = name;
+      contactUser.email = email;
+      contactUser.message = message;
+    } else {
+      contactUser = new Contact({
+        author: req.user._id.toString(),
+        name,
+        email,
+        message,
+        createdAt: new Date(),
+      });
+    }
 
     sendEmail(email);
 
-    await newContact.save();
+    await contactUser.save();
     sendResponse(
       res,
       201,
-      newContact,
+      contactUser,
       false,
       "Your message has been sent successfully."
     );
