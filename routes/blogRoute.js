@@ -212,38 +212,38 @@ router.get("/fetch3blog", async (req, res) => {
   }
 });
 
-// router.get("/fetchAllBlogs", async (req, res) => {
-//   try {
-//     const page = Math.max(1, parseInt(req.query.page) || 1);
-//     const pageSize = Math.max(
-//       1,
-//       Math.min(100, parseInt(req.query.pageSize) || 20)
-//     );
-//     // No filter supplied: return all blogs. If you want filtering later, build a filter object.
-//     const filter = {};
+router.get("/fetchAllBlogs", async (req, res) => {
+  try {
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = Math.max(
+      1,
+      Math.min(100, parseInt(req.query.pageSize) || 20)
+    );
+    // No filter supplied: return all blogs. If you want filtering later, build a filter object.
+    const filter = {};
 
-//     const [total, blogs] = await Promise.all([
-//       Blog.countDocuments(filter),
-//       Blog.find(filter)
-//         .populate("author", "userName email isAdmin")
-//         // .populate("service")
-//         .sort({ createdAt: -1 })
-//         .skip((page - 1) * pageSize)
-//         .limit(pageSize)
-//         .select("-__v"),
-//     ]);
+    const [total, blogs] = await Promise.all([
+      Blog.countDocuments(filter),
+      Blog.find(filter)
+        .populate("author", "userName email isAdmin")
+        // .populate("service")
+        .sort({ createdAt: -1 })
+        .skip((page - 1) * pageSize)
+        .limit(pageSize)
+        .select("-__v"),
+    ]);
 
-//     return sendResponse(
-//       res,
-//       200,
-//       { blogs, meta: { total, page, pageSize } },
-//       false,
-//       "All blogs fetched successfully"
-//     );
-//   } catch (error) {
-//     return sendResponse(res, 500, null, true, error.message);
-//   }
-// });
+    return sendResponse(
+      res,
+      200,
+      { blogs, meta: { total, page, pageSize } },
+      false,
+      "All blogs fetched successfully"
+    );
+  } catch (error) {
+    return sendResponse(res, 500, null, true, error.message);
+  }
+});
 
 router.get("/fetchOneBlog/:id", async (req, res) => {
   try {
