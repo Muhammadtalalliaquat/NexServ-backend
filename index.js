@@ -14,30 +14,56 @@ import "dotenv/config";
 // app.use(cors("*"));
 
 const app = express();
-const PORT = process.env.PORT;
 
+// Middleware
 app.use(express.json());
 app.use(cors({ origin: "*" }));
 app.use(morgan("dev"));
 
-connectDB()
-  .then(() => {
-    app.get("/", (req, res) => {
-      res.send("Server is running and DB is connected");
-    });
+// DB connect (safe for serverless)
+connectDB();
 
-    app.use("/user", authRoutes);
-    app.use("/blogs", blogsRoutes);
-    app.use("/service", serviceRoutes);
-    app.use("/contact-us", contactRoutes);
-    app.use("/user-review", reviewRoutes);
-    app.use("/user-service", userServiceRoutes);
+// Routes
+app.get("/", (req, res) => {
+  res.send("Backend running on Vercel ✅");
+});
 
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use("/user", authRoutes);
+app.use("/blogs", blogsRoutes);
+app.use("/service", serviceRoutes);
+app.use("/contact-us", contactRoutes);
+app.use("/user-review", reviewRoutes);
+app.use("/user-service", userServiceRoutes);
 
-    // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-  })
-  .catch((err) => {
-    console.error("DB not connected Server is not running:", err.message);
-    process.exit(1); // Exit the process if DB connection fails
-  });
+// ❌ NO app.listen()
+// ✅ EXPORT app
+export default app;
+
+// const app = express();
+// const PORT = process.env.PORT;
+
+// app.use(express.json());
+// app.use(cors({ origin: "*" }));
+// app.use(morgan("dev"));
+
+// connectDB()
+//   .then(() => {
+//     app.get("/", (req, res) => {
+//       res.send("Server is running and DB is connected");
+//     });
+
+//     app.use("/user", authRoutes);
+//     app.use("/blogs", blogsRoutes);
+//     app.use("/service", serviceRoutes);
+//     app.use("/contact-us", contactRoutes);
+//     app.use("/user-review", reviewRoutes);
+//     app.use("/user-service", userServiceRoutes);
+
+//     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+//     // app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+//   })
+//   .catch((err) => {
+//     console.error("DB not connected Server is not running:", err.message);
+//     process.exit(1); // Exit the process if DB connection fails
+//   });
