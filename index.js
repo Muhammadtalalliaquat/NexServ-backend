@@ -9,50 +9,22 @@ import connectDB from "./database/data.js";
 import morgan from "morgan";
 import cors from "cors";
 import "dotenv/config";
-// import http from "http";
-// import path from "path";
-// app.use(cors("*"));
-
-const app = express();
-
-// Middleware
-app.use(express.json());
-app.use(cors({ origin: "*" }));
-app.use(morgan("dev"));
-
-// DB connect (safe for serverless)
-connectDB();
-
-// Routes
-app.get("/", (req, res) => {
-  res.send("Backend running on Vercel ✅");
-});
-
-app.get("/db-test", async (req, res) => {
-  res.json({ dbState: mongoose.connection.readyState });
-});
-
-
-app.use("/user", authRoutes);
-app.use("/blogs", blogsRoutes);
-app.use("/service", serviceRoutes);
-app.use("/contact-us", contactRoutes);
-app.use("/user-review", reviewRoutes);
-app.use("/user-service", userServiceRoutes);
-
-// ❌ NO app.listen()
-// ✅ EXPORT app
-export default app;
+// // import http from "http";
+// // import path from "path";
 
 // const app = express();
 // const PORT = process.env.PORT;
 
 // app.use(express.json());
-// app.use(cors({ origin: "*" }));
+// app.use(cors("*"));
 // app.use(morgan("dev"));
 
 // connectDB()
 //   .then(() => {
+//     app.get("/", (req, res) => {
+//       res.send("Server is running and DB is connected");
+//     });
+
 //     app.get("/", (req, res) => {
 //       res.send("Server is running and DB is connected");
 //     });
@@ -72,3 +44,32 @@ export default app;
 //     console.error("DB not connected Server is not running:", err.message);
 //     process.exit(1); // Exit the process if DB connection fails
 //   });
+
+
+
+const app = express();
+
+// middleware
+app.use(express.json());
+app.use(cors({ origin: "*" }));
+app.use(morgan("dev"));
+
+// DB connect (serverless safe)
+connectDB();
+
+// test route
+app.get("/", (req, res) => {
+  res.send("Backend running on Vercel ✅");
+});
+
+// routes
+app.use("/user", authRoutes);
+app.use("/blogs", blogsRoutes);
+app.use("/service", serviceRoutes);
+app.use("/contact-us", contactRoutes);
+app.use("/user-review", reviewRoutes);
+app.use("/user-service", userServiceRoutes);
+
+// ❌ NO app.listen
+export default app;
+

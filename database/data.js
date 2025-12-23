@@ -14,27 +14,22 @@
 // export default connectDB;
 
 
-
 import mongoose from "mongoose";
 
 let isConnected = false;
 
 const connectDB = async () => {
-  if (isConnected) {
-    return;
-  }
+  if (isConnected) return;
 
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
-      dbName: "your_db_name", // optional but recommended
-    });
-
+    await mongoose.connect(process.env.MONGODB_URI);
     isConnected = true;
-    console.log("DB connected ✅");
-  } catch (error) {
-    console.error("DB connection failed ❌", error.message);
-    // ❌ NO process.exit()
+    console.log("MongoDB connected ✅");
+  } catch (err) {
+    console.error("MongoDB error ❌", err.message);
+    // ❌ NEVER process.exit on Vercel
   }
 };
 
 export default connectDB;
+
