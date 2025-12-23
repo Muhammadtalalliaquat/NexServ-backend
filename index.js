@@ -11,21 +11,17 @@ import cors from "cors";
 import "dotenv/config";
 // import http from "http";
 // import path from "path";
+// app.use(cors("*"));
 
 const app = express();
 const PORT = process.env.PORT;
 
 app.use(express.json());
-// app.use(cors("*"));
 app.use(cors({ origin: "*" }));
 app.use(morgan("dev"));
 
 connectDB()
   .then(() => {
-    app.get("/", (req, res) => {
-      res.send("Server is running and DB is connected");
-    });
-
     app.get("/", (req, res) => {
       res.send("Server is running and DB is connected");
     });
