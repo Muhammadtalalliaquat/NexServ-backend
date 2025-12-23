@@ -28,6 +28,11 @@ app.get("/", (req, res) => {
   res.send("Backend running on Vercel ✅");
 });
 
+app.get("/db-test", async (req, res) => {
+  res.json({ dbState: mongoose.connection.readyState });
+});
+
+
 app.use("/user", authRoutes);
 app.use("/blogs", blogsRoutes);
 app.use("/service", serviceRoutes);
