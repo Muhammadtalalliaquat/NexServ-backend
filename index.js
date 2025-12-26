@@ -19,25 +19,21 @@
 
 // connectDB()
 //   .then(() => {
-//     app.get("/", (req, res) => {
-//       res.send("Server is running and DB is connected");
-//     });
-
-//     app.get("/", (req, res) => {
-//       res.send("Server is running and DB is connected");
-//     });
-
-//     app.use("/user", authRoutes);
-//     app.use("/blogs", blogsRoutes);
-//     app.use("/service", serviceRoutes);
-//     app.use("/contact-us", contactRoutes);
-//     app.use("/user-review", reviewRoutes);
-//     app.use("/user-service", userServiceRoutes);
-
-//     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
 //   })
 //   .catch((err) => {
 //     console.error("DB not connected Server is not running:", err.message);
 //     process.exit(1); // Exit the process if DB connection fails
 //   });
+  
+//   app.get("/", (req, res) => {
+//     res.send("Server is running and DB is connected");
+//   });
+
+//   app.use("/user", authRoutes);
+//   app.use("/blogs", blogsRoutes);
+//   app.use("/service", serviceRoutes);
+//   app.use("/contact-us", contactRoutes);
+//   app.use("/user-review", reviewRoutes);
+//   app.use("/user-service", userServiceRoutes);
+
+//   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

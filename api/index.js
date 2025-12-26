@@ -1,26 +1,32 @@
 import express from "express";
-import cors from "cors";
+import authRoutes from "../routes/auth.js";
+import serviceRoutes from "../routes/serviceRoute.js";
+import userServiceRoutes from "../routes/userServiceRoute.js";
+import blogsRoutes from "../routes/blogRoute.js";
+import contactRoutes from "../routes/contactRoute.js";
+import reviewRoutes from "../routes/reviewRoute.js";
+import connectDB from "../database/data.js";
+import Serverless from "serverless";
 import morgan from "morgan";
-
-import connectDB from "../config/db.js";
-
-import authRoutes from "../routes/authRoutes.js";
-import blogsRoutes from "../routes/blogsRoutes.js";
-import serviceRoutes from "../routes/serviceRoutes.js";
-import contactRoutes from "../routes/contactRoutes.js";
-import reviewRoutes from "../routes/reviewRoutes.js";
-import userServiceRoutes from "../routes/userServiceRoutes.js";
+import cors from "cors";
+import "dotenv/config";
 
 const app = express();
+const PORT = process.env.PORT;
 
 app.use(express.json());
-app.use(cors({ origin: "*" }));
+app.use(cors("*"));
 app.use(morgan("dev"));
 
-connectDB();
+connectDB()
+  .then(() => {})
+  .catch((err) => {
+    console.error("DB not connected Server is not running:", err.message);
+    process.exit(1); // Exit the process if DB connection fails
+  });
 
 app.get("/", (req, res) => {
-  res.send("Backend running on Vercel ✅");
+  res.send("Server is running and DB is connected");
 });
 
 app.use("/user", authRoutes);
@@ -30,5 +36,5 @@ app.use("/contact-us", contactRoutes);
 app.use("/user-review", reviewRoutes);
 app.use("/user-service", userServiceRoutes);
 
-// ❌ NO app.listen
-export default app;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+export const handler = Serverless.app(app);
