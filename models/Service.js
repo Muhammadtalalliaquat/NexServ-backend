@@ -4,7 +4,7 @@ const serviceSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true, minlength: 2 },
     description: { type: String, required: true, minlength: 10 },
-    image: { type: String },
+    image: { type: String, required: true },
     imagePublicId: { type: String },
     // price: { type: Number, min: 0 },
     category: {
