@@ -17,7 +17,9 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
-connectDB();
+connectDB()
+  .then(() => console.log("✅ Database connection established"))
+  .catch((err) => console.error("❌ Database connection failed:", err));
 
 app.get("/", (req, res) => {
   res.send("Server is running and DB is connected");
@@ -30,7 +32,9 @@ app.use("/contact-us", contactRoutes);
 app.use("/user-review", reviewRoutes);
 app.use("/user-service", userServiceRoutes);
 
-app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
-});
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`✅ Server is running on port ${PORT}`);
+  });
+}
 export default app;
