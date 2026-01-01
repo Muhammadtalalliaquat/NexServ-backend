@@ -17,9 +17,19 @@ app.use(express.json());
 app.use(cors());
 app.use(morgan("dev"));
 
-connectDB()
-  .then(() => console.log("✅ Database connection established"))
-  .catch((err) => console.error("❌ Database connection failed:", err));
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error("DB Connection Error:", error);
+    res.status(500).json({
+      error: true,
+      data: null,
+      msg: "Database connection failed",
+    });
+  }
+});
 
 app.get("/", (req, res) => {
   res.send("Server is running and DB is connected");
@@ -31,6 +41,15 @@ app.use("/service", serviceRoutes);
 app.use("/contact-us", contactRoutes);
 app.use("/user-review", reviewRoutes);
 app.use("/user-service", userServiceRoutes);
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({
+    error: true,
+    data: null,
+    msg: err.message || "Something went wrong!",
+  });
+});
 
 if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {

@@ -1,32 +1,55 @@
 import mongoose from "mongoose";
 import "dotenv/config";
 
-let cachedConnection = null;
+let isConnected = false;
 
 const connectDB = async () => {
-  // Check if we have a cached connection AND it's still connected
-  if (cachedConnection && mongoose.connection.readyState === 1) {
-    console.log("✅ Using cached database connection");
-    return cachedConnection;
+  // If already connected, return immediately
+  if (isConnected && mongoose.connection.readyState === 1) {
+    console.log("✅ Using existing database connection");
+    return;
+  }
+
+  // Check if MONGO_URI exists
+  if (!process.env.MONGODB_URI) {
+    throw new Error("❌ MONGO_URI is not defined in environment variables!");
   }
 
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+    // Set strictQuery option
+    mongoose.set("strictQuery", false);
+
+    // Connect to MongoDB
+    await mongoose.connect(process.env.MONGODB_URI, {
       bufferCommands: false,
-      maxPoolSize: 10, // Add connection pooling
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s
-      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
     });
 
-    cachedConnection = conn;
-    console.log("✅ MongoDB Connected:", conn.connection.host);
-    return conn;
+    isConnected = true;
+    console.log("✅ MongoDB Connected:", mongoose.connection.host);
   } catch (error) {
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    cachedConnection = null; // Reset cache on error
-    throw error; // Throw error instead of process.exit
+    isConnected = false;
+    throw error;
   }
 };
+
+// Handle connection events
+mongoose.connection.on("connected", () => {
+  console.log("✅ Mongoose connected to DB");
+});
+
+mongoose.connection.on("error", (err) => {
+  console.error("❌ Mongoose connection error:", err);
+  isConnected = false;
+});
+
+mongoose.connection.on("disconnected", () => {
+  console.log("⚠️ Mongoose disconnected");
+  isConnected = false;
+});
 
 export default connectDB;
 
